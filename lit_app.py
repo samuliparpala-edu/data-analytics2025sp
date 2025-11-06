@@ -2,9 +2,12 @@ import streamlit as st
 import pandas as pd
 
 # HUOM! Data on aina hyvä rajata pelkästään siihen, mitä dataa käytetään
+# Streamlitiin kirjautuminen githubilla
 
 rovaniemi_df = pd.read_csv("https://pxdata.stat.fi/PxWeb/sq/4c02da84-4baf-4fec-8c45-101aa473f885", encoding="latin-1")
 rovaniemi_df[["Vuosi", "Kuukausi_num"]] = rovaniemi_df["Kuukausi"].str.split("M", expand=True)
+
+str.title("Hotellien kuukausittainen kapasiteetti ja yöpymiset kunnittain muuttujina Kuukausi, Kunta ja Tiedot")
 
 # Load one municipality via saved-query CSV URL (PxWeb).
 # Show a data table for that municipality.
