@@ -1,9 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-# HUOM! Data on aina hyvä rajata pelkästään siihen, mitä dataa käytetään
-# Streamlitiin kirjautuminen githubilla
-
 rovaniemi_df = pd.read_csv("https://pxdata.stat.fi/PxWeb/sq/4c02da84-4baf-4fec-8c45-101aa473f885", encoding="latin-1")
 rovaniemi_df[["Vuosi", "Kuukausi_num"]] = rovaniemi_df["Kuukausi"].str.split("M", expand=True)
 
@@ -30,13 +27,14 @@ st.line_chart(huone_aste_roi_df, x="Kuukausi", y="Huonekäyttöaste, % Rovaniemi
 # Yearly totals (bar chart) for nights spent.
 st.header("Yearly totals (bar chart) for nights spent.")
 
-# Tunnilla tehty
+# Made during class, here we use a classic groupby method to sum yearly nights spent
 vuosi_yo_roi_df = rovaniemi_df[["Vuosi", "Kuukausi", "Yöpymiset, lkm Rovaniemi"]].groupby(by="Vuosi").sum()
 st.dataframe(vuosi_yo_roi_df)
 st.text("Classic groupBy")
 st.bar_chart(vuosi_yo_roi_df, y="Yöpymiset, lkm Rovaniemi")
 
-# Oma ratkaisu
+# Aggregation solution given by ChatGPT. Works the same, I was wondering if it is more resource-heavy than groupby method,
+# but in such small scale operations as this, I do not think that it has any significant impact on preformance.
 st.text("Aggregation")
 yearly_df = rovaniemi_df.groupby(by="Vuosi", as_index=False).agg({"Yöpymiset, lkm Rovaniemi": "sum"})
 st.bar_chart(yearly_df, x="Vuosi", y="Yöpymiset, lkm Rovaniemi")
@@ -45,7 +43,6 @@ st.bar_chart(yearly_df, x="Vuosi", y="Yöpymiset, lkm Rovaniemi")
 
 # ==============================================================================
 # Domestic vs Foreign: table + small line chart (if columns exist).
-#vuosi_yo_roi_ku_df = rovaniemi_df[["Vuosi", "Kotimaiset yöpymiset, lkm Rovaniemi", "Ulkomaiset yöpymiset Rovaniemi"]].groupby(by="Vuosi").sum()
 st.header("Domestic vs Foreign: table + small line chart (if columns exist).")
 temp_df = rovaniemi_df[["Vuosi", "Kotimaiset yöpymiset, lkm Rovaniemi", "Ulkomaiset yöpymiset Rovaniemi"]]
 temp_df["Ulkomaiset yöpymiset Rovaniemi"] = temp_df["Ulkomaiset yöpymiset Rovaniemi"].str.replace(".", "")
@@ -60,21 +57,22 @@ st.line_chart(vuosiroikudf)#, y=["Kotimaiset yöpymiset, lkm Rovaniemi", "Ulkoma
 # An area_chart of a chosen metric.
 st.header("An area_chart of a chosen metric.")
 
-# Tunnilla tehty
+# Made during class
 #huone_vuode_df = rovaniemi_df[["Huoneet, lkm Rovaniemi", "Vuoteet, lkm Rovaniemi"]]
 st.text("Tunnilla tehty")
 st.area_chart(rovaniemi_df, x="Kuukausi", y=["Huoneet, lkm Rovaniemi", "Vuoteet, lkm Rovaniemi"])
 
-# Omia kokeiluja
+# Self made
 st.text("Omia kokeiluja")
-# Poistetaan stringidatasta piste, muutetaan data numeeriseksi
+
+# Remove period from stringdata, transform data to numeric form
 rovaniemi_df["Yöpymisen keskihinta Rovaniemi"] = rovaniemi_df["Yöpymisen keskihinta Rovaniemi"].str.replace(".", "")
 rovaniemi_df["Yöpymisen keskihinta Rovaniemi"] = pd.to_numeric(rovaniemi_df["Yöpymisen keskihinta Rovaniemi"])
 rovaniemi_df["Huoneen keskihinta Rovaniemi"] = rovaniemi_df["Huoneen keskihinta Rovaniemi"].str.replace(".", "")
 rovaniemi_df["Huoneen keskihinta Rovaniemi"] = pd.to_numeric(rovaniemi_df["Huoneen keskihinta Rovaniemi"])
 
-# Koska luvuista poistettiin piste, lukujen todellinen arvo 100 kertaistui. 
-# Jaetaan siis arvot sadalla, jotta saadaan todelliset lukemat näkyviin.
+# Since period -characters were removed from data, the value of all items multiplied by 100,
+# for example '345.6' --> '3456'. We'll divide the new values by 100 to get back to actual values.
 rovaniemi_df["Yöpymisen keskihinta Rovaniemi"] = rovaniemi_df["Yöpymisen keskihinta Rovaniemi"] / 100
 rovaniemi_df["Huoneen keskihinta Rovaniemi"] = rovaniemi_df["Huoneen keskihinta Rovaniemi"] / 100
 
@@ -104,15 +102,18 @@ st.line_chart(combined_df)
 # ==============================================================================
 # Download button to export the comparison data.
 st.header("Download button to export the comparison data.")
-#st.button("Test button", key="download_file")
+
+# Convert data to .csv format
 @st.cache_data
 def convert_download(combined_df):
     return combined_df.to_csv().encode("latin-1")
 
 combined_df_csv = convert_download(combined_df)
 
+# Button is placed inside fragment to prevent whole app rerunning when clicking the button.
 @st.fragment
 def download_button():
+    # key -argument would not necessarily be needed when working with only one button. But let's put it here for best practices
     if st.download_button("Download comparison data", data=combined_df_csv, file_name="comparison_data.csv", key="download_button"):
         st.write("Comparison data is being downloaded")
 
