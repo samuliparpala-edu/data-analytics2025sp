@@ -113,7 +113,7 @@ combined_df_csv = convert_download(combined_df)
 
 @st.fragment
 def download_button():
-    if st.download_button("Test button", data=combined_df_csv, file_name="comparison_data.csv", key="download_button"):
+    if st.download_button("Download comparison data", data=combined_df_csv, file_name="comparison_data.csv", key="download_button"):
         st.write("Comparison data is being downloaded")
 
 download_button()
