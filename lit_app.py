@@ -103,4 +103,17 @@ st.line_chart(combined_df)
 
 # ==============================================================================
 # Download button to export the comparison data.
+st.header("Download button to export the comparison data.")
+#st.button("Test button", key="download_file")
+@st.cache_data
+def convert_download(combined_df):
+    return combined_df.to_csv().encode("latin-1")
 
+combined_df_csv = convert_download(combined_df)
+
+@st.fragment
+def download_button():
+    if st.download_button("Test button", data=combined_df_csv, file_name="comparison_data.csv", key="download_button"):
+        st.write("Comparison data is being downloaded")
+
+download_button()
